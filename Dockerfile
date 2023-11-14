@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt && \
     rm -rf /tmp/*
 
 # 使用 PyInstaller 编译 Python 脚本
-RUN pyinstaller --onefile /srv/miuitask.py
+RUN pyinstaller -F /srv/miuitask.py
 
 # 设置工作目录
 WORKDIR /srv
