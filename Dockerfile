@@ -1,6 +1,9 @@
 # 使用 aarch64 架构的 Python 镜像
 FROM arm64v8/python:3.9-alpine
 
+# 安装 gcc 和其他编译依赖
+RUN apk add --no-cache build-base libffi-dev
+
 # 复制文件到容器内
 COPY ./utils /srv/utils/
 COPY ./requirements.txt /tmp
