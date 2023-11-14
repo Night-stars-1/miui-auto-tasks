@@ -46,11 +46,11 @@ jobs:
 
       - name: Copy the binary from the container to the host
         run: |
-          mkdir -p ${{ github.workspace }}/test
-          docker cp temp_container:/dist/miuitask ${{ github.workspace }}/test/miuitask
+          mkdir -p ${{ github.workspace }}/dist
+          docker cp temp_container:/dist/miuitask ${{ github.workspace }}/dist/miuitask
 
       - name: Upload binary as an artifact
         uses: actions/upload-artifact@v3
         with:
           name: miuitask-binary
-          path: /test/miuitask
+          path: ${{ github.workspace }}/dist/miuitask
