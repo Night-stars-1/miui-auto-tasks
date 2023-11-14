@@ -10,7 +10,7 @@ COPY ./miuitask.py /srv/
 VOLUME ["/srv/data"]
 
 # 安装依赖项和 PyInstaller
-RUN pip install --no-cache-dir -i https://mirrors.bfsu.edu.cn/pypi/web/simple -r /tmp/requirements.txt && \
+RUN pip install --no-cache-dir -r /tmp/requirements.txt && \
     pip install pyinstaller && \
     rm -rf /tmp/*
 
