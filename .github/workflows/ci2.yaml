@@ -38,6 +38,7 @@ jobs:
           push: false
           platforms: linux/aarch64
           load: true # Load the built image to Docker daemon
+          tags: miuitask_test:ci
 
       - name: Create a container from the image
         run: |
