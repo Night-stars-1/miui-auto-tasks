@@ -46,6 +46,7 @@ jobs:
 
       - name: Copy the binary from the container to the host
         run: |
+          mkdir -p /test
           docker cp temp_container:/srv/dist/miuitask /test/miuitask
 
       - name: Upload binary as an artifact
