@@ -37,5 +37,5 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: python-package
+        name: miuitask-${{ matrix.python-version }}
         path: dist/*
