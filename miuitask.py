@@ -1,8 +1,6 @@
-"""
-Date: 2023-11-13 20:29:19
-LastEditors: Night-stars-1 nujj1042633805@gmail.com
-LastEditTime: 2023-11-13 20:29:58
-"""
+# new Env("MIUI-Auto-Task")
+# cron 30 8 * * * miuitask.py
+
 import asyncio
 
 from utils.api.login import Login
@@ -28,7 +26,10 @@ async def main():
                 if not task.showType:
                     log.info(f"开始执行{task.name}任务")
                     if task_obj := sign_task_obj.get(task.name):  # 签到任务对象
-                        await task_obj(cookies, token).sign()
+                        if getattr(account, task_obj.__name__):
+                            await task_obj(cookies, token).sign()
+                        else:
+                            log.info(f"任务{task.name}被禁用")
                     else:
                         log.error(f"未找到{task.name}任务")
                 else:
