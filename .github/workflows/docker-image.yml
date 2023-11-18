@@ -12,7 +12,7 @@ on:
     types: [published]
 
 env:
-  DOCKERHUB_REPO: o1si/miui-auto-tasks
+  DOCKERHUB_REPO: nightstar035/miui-auto-tasks
 
 jobs:
   build:
