@@ -1,7 +1,7 @@
 """
 Date: 2023-11-13 19:55:22
 LastEditors: Night-stars-1 nujj1042633805@gmail.com
-LastEditTime: 2025-02-11 00:59:19
+LastEditTime: 2025-02-14 18:46:15
 """
 
 import json
@@ -19,18 +19,24 @@ from .request import request
 _conf = ConfigManager.data_obj
 
 
-def find_key(data: dict, key: str):
-    """递归查找字典中的key"""
-    for dkey, dvalue in data.items():
-        if dkey == key:
-            return dvalue
-        if isinstance(dvalue, dict):
-            find_key(dvalue, key)
-    return None
+def get_value_by_jsonpath(data: dict, jsonpath: str):
+    """
+    根据jsonpath获取value
+    :return: 如果未找到则返回空字符
+    """
+    result = ""
+    try:
+        geetest_validate_expr = parse(jsonpath)
+        geetest_validate_match = geetest_validate_expr.find(data)
+        if len(geetest_validate_match) > 0:
+            result: str = geetest_validate_match[0].value
+    except JsonPathParserError:
+        print_exc()
+    return result
 
 
 def get_validate_other(
-    gt: str, challenge: str, result: str
+    gt: str, challenge: str, result: str, url: str
 ) -> GeetestResult:  # pylint: disable=invalid-name
     """获取人机验证结果"""
     try:
@@ -42,6 +48,7 @@ def get_validate_other(
                 .replace("{gt}", gt)
                 .replace("{challenge}", challenge)
                 .replace("{result}", str(result))
+                .replace("{url}", url)
             )
             data = _conf.preference.get_geetest_data.copy()
             data = json.loads(
@@ -49,6 +56,7 @@ def get_validate_other(
                 .replace("{gt}", gt)
                 .replace("{challenge}", challenge)
                 .replace("{result}", str(result))
+                .replace("{url}", url)
             )
             for i in range(_conf.preference.get_geetest_try_count):
                 log.info(f"第{i}次获取结果")
@@ -60,18 +68,12 @@ def get_validate_other(
                 )
                 log.debug(response.text)
                 result = response.json()
-                geetest_validate_expr = parse(
-                    _conf.preference.get_geetest_validate_path
+                validate = get_value_by_jsonpath(
+                    result, _conf.preference.get_geetest_validate_path
                 )
-                geetest_validate_match = geetest_validate_expr.find(result)
-                if len(geetest_validate_match) > 0:
-                    validate = geetest_validate_match[0].value
-                geetest_challenge_expr = parse(
-                    _conf.preference.get_geetest_challenge_path
+                challenge = get_value_by_jsonpath(
+                    result, _conf.preference.get_geetest_challenge_path
                 )
-                geetest_challenge_match = geetest_challenge_expr.find(result)
-                if len(geetest_challenge_match) > 0:
-                    challenge = geetest_challenge_match[0].value
                 if validate and challenge:
                     return GeetestResult(challenge=challenge, validate=validate)
                 time.sleep(1)
@@ -84,7 +86,7 @@ def get_validate_other(
 
 
 def get_validate(
-    gt: str, challenge: str
+    gt: str, challenge: str, url: str
 ) -> GeetestResult:  # pylint: disable=invalid-name
     """创建人机验证并结果"""
     try:
@@ -93,11 +95,17 @@ def get_validate(
         if _conf.preference.geetest_url:
             params = _conf.preference.geetest_params.copy()
             params = json.loads(
-                json.dumps(params).replace("{gt}", gt).replace("{challenge}", challenge)
+                json.dumps(params)
+                .replace("{gt}", gt)
+                .replace("{challenge}", challenge)
+                .replace("{url}", url)
             )
             data = _conf.preference.geetest_data.copy()
             data = json.loads(
-                json.dumps(data).replace("{gt}", gt).replace("{challenge}", challenge)
+                json.dumps(data)
+                .replace("{gt}", gt)
+                .replace("{challenge}", challenge)
+                .replace("{url}", url)
             )
             response = request(
                 _conf.preference.geetest_method,
@@ -107,25 +115,19 @@ def get_validate(
             )
             log.debug(response.text)
             result = response.json()
-            try:
-                geetest_validate_expr = parse(_conf.preference.geetest_validate_path)
-                geetest_validate_match = geetest_validate_expr.find(result)
-                if len(geetest_validate_match) > 0:
-                    validate = geetest_validate_match[0].value
-                geetest_challenge_expr = parse(_conf.preference.geetest_challenge_path)
-                geetest_challenge_match = geetest_challenge_expr.find(result)
-                if len(geetest_challenge_match) > 0:
-                    challenge = geetest_challenge_match[0].value
-                geetest_result_expr = parse(_conf.preference.geetest_result_path)
-                geetest_result_match = geetest_result_expr.find(result)
-                if len(geetest_result_match) > 0:
-                    result = geetest_result_match[0].value
-            except JsonPathParserError:
-                print_exc()
+            validate = get_value_by_jsonpath(
+                result, _conf.preference.geetest_validate_path
+            )
+            challenge = get_value_by_jsonpath(
+                result, _conf.preference.geetest_challenge_path
+            )
+            result = get_value_by_jsonpath(result, _conf.preference.geetest_result_path)
             if validate and challenge:
                 return GeetestResult(challenge=challenge, validate=validate)
             else:
-                return get_validate_other(gt=gt, challenge=challenge, result=result)
+                return get_validate_other(
+                    gt=gt, challenge=challenge, result=result, url=url
+                )
         else:
             return GeetestResult(challenge="", validate="")
     except Exception:  # pylint: disable=broad-exception-caught
